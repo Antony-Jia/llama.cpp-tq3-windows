@@ -198,6 +198,18 @@ cmake --build build --config Release --target llama-cli llama-server -j 8
 
 After applying these two fixes, `llama-cli.exe` and `llama-server.exe` should build successfully.
 
+### Example Server Startup Commands
+
+Basic:
+```powershell
+.\build\bin\Release\llama-server.exe -m path\to\Qwen3.5-27B-TQ3_1S.gguf -ngl 99 -fa on -np 1 -c 2048 -t 12 --threads-batch 12
+```
+
+Disable reasoning mode (for simpler API usage):
+```powershell
+.\build\bin\Release\llama-server.exe -m path\to\Qwen3.5-27B-TQ3_1S.gguf -ngl 99 -fa on -np 1 -c 2048 -t 12 --threads-batch 12 --reasoning off --reasoning-budget 0 --reasoning-format none
+```
+
 ## License
 
 MIT — same as llama.cpp

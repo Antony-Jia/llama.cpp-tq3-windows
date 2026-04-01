@@ -95,6 +95,18 @@ cmake --build build --config Release --target llama-cli llama-server -j 8
 
 修复以上两个问题后，即可成功编译出 `llama-cli.exe` 和 `llama-server.exe`。
 
+### 服务启动参数示例
+
+基础配置：
+```powershell
+.\build\bin\Release\llama-server.exe -m path\to\Qwen3.5-27B-TQ3_1S.gguf -ngl 99 -fa on -np 1 -c 2048 -t 12 --threads-batch 12
+```
+
+关闭推理模式（适合普通 API 调用）：
+```powershell
+.\build\bin\Release\llama-server.exe -m path\to\Qwen3.5-27B-TQ3_1S.gguf -ngl 99 -fa on -np 1 -c 2048 -t 12 --threads-batch 12 --reasoning off --reasoning-budget 0 --reasoning-format none
+```
+
 ## 快速开始
 
 设置路径变量：
