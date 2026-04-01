@@ -1,5 +1,7 @@
 # llama.cpp-tq3
 
+[中文版本 (Chinese Version)](README_zh.md)
+
 **Run a 27B language model on a single 16GB GPU — with near-Q4_0 quality.**
 
 TQ3_1S is a 3.5-bit quantization format that compresses model weights using Walsh-Hadamard rotation and dual-scale encoding. On Qwen3.5-27B it reaches near-`Q4_0` quality while being materially smaller — small enough to fit models on consumer GPUs that `Q4_0` cannot fit fully on in the same setup.
@@ -146,6 +148,55 @@ If you want to reproduce the result, use the same base model, the same `wiki.tes
 - [RaBitQ](https://arxiv.org/abs/2405.12497) — Walsh-Hadamard transform inspiration
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) — inference engine
 - [Qwen3.5-27B](https://huggingface.co/Qwen/Qwen3.5-27B) — base model
+
+## Windows Build Fixes
+
+When building with CUDA on Windows, you may encounter the following two issues. Here are the fixes:
+
+### Issue 1: `ggml_cuda_op_turbo_wht was referenced but not defined`
+
+**Cause**: If you run `cmake` before `git submodule update --init --recursive`, CMake will not find `turbo-wht.cu` during the initial configuration and it won't be added to the build.
+
+**Solution**: After `git submodule update` completes, re-run CMake and clear the build cache:
+```powershell
+cd llama.cpp-tq3
+# Re-configure
+cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=89
+# Clear old build cache
+rm -rf build/ggml/src/ggml-cuda/ggml-cuda.dir/Release/*
+# Rebuild
+cmake --build build --config Release --target llama-cli llama-server -j 8
+```
+
+### Issue 2: `identifier "ggml_tq3_ap_extra" is undefined`, `GGML_TQ3_AP_MAGIC: undeclared identifier`
+
+**Cause**: `llama-model.cpp` uses the `ggml_tq3_ap_extra` struct but the declaration is missing from the included headers.
+
+**Solution**: Add the following declarations at the top of `src/llama-model.cpp`:
+```cpp
+// TurboQuant TQ3 activation quantization extra data
+struct ggml_tq3_ap_extra {
+    int magic;
+    float * means;
+    int * row_offsets;
+    uint8_t * bitmap;
+};
+
+#define GGML_TQ3_AP_MAGIC 0x54513341 // "TQ3A"
+```
+
+### Complete Windows Build Command (RTX 40xx Series)
+
+```powershell
+cd D:\LlmModels\Qwen3.5-27B-TQ3_1S
+git clone --branch main https://github.com/turbo-tan/llama.cpp-tq3.git llama.cpp-tq3-main
+cd .\llama.cpp-tq3-main
+git submodule update --init --recursive
+cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=89
+cmake --build build --config Release --target llama-cli llama-server -j 8
+```
+
+After applying these two fixes, `llama-cli.exe` and `llama-server.exe` should build successfully.
 
 ## License
 
